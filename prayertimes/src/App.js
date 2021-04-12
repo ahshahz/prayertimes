@@ -16,7 +16,20 @@ import {
   FormControl,
   FormControlLabel,
 } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 
+
+const useStyles = makeStyles({
+  table: {
+    minWidth: 650,
+  },
+});
 
 
 
@@ -61,8 +74,8 @@ function App() {
       .then((res) => res.json())
       .then((data) => {
         console.log("data", data);
-        window.alert(JSON.stringify(values, 0, 2));
-        setDatarr(data);
+     //   window.alert(JSON.stringify(values, 0, 2));
+        setDatarr(data.times);
       })
       .catch((err) => {
         console.log(err);
@@ -76,9 +89,39 @@ function App() {
     //loading here as this does it once
     //second array makes it simulate component did mount
   }, [dataarr]);
+  useEffect(() => {
+    const year = new Date().getFullYear(); 
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; 
+    const method = 0; 
+    const both = false; 
+    const time = 1; 
+    navigator.geolocation.getCurrentPosition(function(position) {
+      console.log("Latitude is :", position.coords.latitude);
+      console.log("Longitude is :", position.coords.longitude);
+      const url = 'https://www.moonsighting.com/time_json.php?year=' + year + '&tz=' + timezone +'&lat=' + position.coords.latitude + '&lon=' + position.coords.longitude + '&method=' + method + '&both=' + both + '&time=' + time
+  
+      fetch(url, {
+       
+      })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("data", data);
+       // window.alert(JSON.stringify(values, 0, 2));
+        setDatarr(data.times);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    
+    });
+  }, []);
   return (
     <div style={{ padding: 16, margin: 'auto', maxWidth: 600 }}>
       <CssBaseline />
+      <Typography variant="h2" align="center" component="h1" gutterBottom>
+      Page Under Construction Use With Caution 
+      </Typography>
+  
       <Typography variant="h4" align="center" component="h1" gutterBottom>
         Prayer Chart Time Form
       </Typography>
@@ -89,8 +132,9 @@ function App() {
         </Link>
         . Enter your desired Latitude and Longitude to get Prayer Times from this {' '}
         <Link href="https://github.com/PrayerTimeResearch/PrayerTimeAPI">
-          API
+          API.
         </Link>{' '}
+        User Location is not stored anywhere on website please consider enabling. 
       </Typography>
       <Form
         onSubmit={onSubmit}
@@ -125,14 +169,15 @@ function App() {
                 </Grid>
                
             
-              
+               {/*disabled = (reset) {submitting || pristine} */}
+              {/*disabled = (submit) {submitting}*/}
             
                 <Grid item style={{ marginTop: 16 }}>
                   <Button
                     type="button"
                     variant="contained"
                     onClick={reset}
-                    disabled={submitting || pristine}
+                    disabled={true}                   
                   >
                     Reset
                   </Button>
@@ -142,15 +187,48 @@ function App() {
                     variant="contained"
                     color="primary"
                     type="submit"
-                    disabled={submitting}
+                    disabled={true}
                   >
                     Submit
                   </Button>
                 </Grid>
               </Grid>
             </Paper>
-            <pre>{JSON.stringify(values, 0, 2)}</pre>
+           {/*     <pre>{JSON.stringify(values, 0, 2)}</pre>*/}
+            <TableContainer component={Paper}>
+           <Table aria-label="simple table">
+             <TableHead>
+               <TableRow>
+                 <TableCell>Day</TableCell>
+                 <TableCell align="right">Fajr</TableCell>
+                 <TableCell align="right">Sunrise</TableCell>
+                 <TableCell align="right">Zhur</TableCell>
+                 <TableCell align="right">Asr</TableCell>
+                 <TableCell align="right">Maghrib</TableCell>
+                 <TableCell align="right">Isha</TableCell>
+               </TableRow>
+             </TableHead>
+             <TableBody>
+               {dataarr.map((row) => (
+                 <TableRow key={row.times.day}>
+                   <TableCell component="th" scope="row">
+                     {row.day}
+                   </TableCell>
+                 
+                   <TableCell align="right">{row.times.fajr}</TableCell>
+                   <TableCell align="right">{row.times.sunrise}</TableCell>
+                   <TableCell align="right">{row.times.dhuhr}</TableCell>
+                   <TableCell align="right">{row.times.asr_s}</TableCell>
+                   <TableCell align="right">{row.times.maghrib}</TableCell>
+                   <TableCell align="right">{row.times.isha}</TableCell>
+
+                 </TableRow>
+               ))}
+             </TableBody>
+           </Table>
+         </TableContainer>
           </form>
+        
         )}
       />
     </div>
