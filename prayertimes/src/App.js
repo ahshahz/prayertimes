@@ -107,7 +107,15 @@ function App() {
       .then((data) => {
         console.log("data", data);
        // window.alert(JSON.stringify(values, 0, 2));
-        setDatarr(data.times);
+       console.log("data.times ", data.times);
+       var now = new Date();
+       var start = new Date(now.getFullYear(), 0, 0);
+       var diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+       var oneDay = 1000 * 60 * 60 * 24;
+       var day = Math.floor(diff / oneDay);
+       var actual = day - 1; 
+       console.log('Day of year: ' + actual);
+        setDatarr(data.times.slice(actual,data.times.length));
       })
       .catch((err) => {
         console.log(err);
