@@ -226,7 +226,7 @@ function App() {
                    <TableCell align="right">{row.times.fajr}</TableCell>
                    <TableCell align="right">{row.times.sunrise}</TableCell>
                    <TableCell align="right">{row.times.dhuhr}</TableCell>
-                   <TableCell align="right">{row.times.asr_s}</TableCell>
+                   <TableCell align="right">{row.times.asr_h}</TableCell>
                    <TableCell align="right">{row.times.maghrib}</TableCell>
                    <TableCell align="right">{row.times.isha}</TableCell>
 
