@@ -8,6 +8,7 @@ import {
   Link,
   Grid,
   Button,
+  Box,
   CssBaseline,
   RadioGroup,
   FormLabel,
@@ -23,38 +24,73 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-
+import jsPDF from 'jspdf';  
+import html2canvas from 'html2canvas';  
 
 const useStyles = makeStyles({
-  table: {
-    minWidth: 650,
+
+  root: {
+    width: '100%',
+  },
+  container: {
+    overflowX: "initial",
   },
 });
 
 
 
-const onChange = async values =>{
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-  await sleep(300);
-  
- 
-}
+
 const validate = values => {
   console.log("values ", values);
 
   const errors = {};
-  if (!values.latitude) {
+ /* if (!values.latitude) {
     errors.latitude = 'Required';
+  } */
+  if(!values.latitude || isNaN(values.latitude) || !/^\d*\.?\d*$/g.test(values.latitude) ){
+   console.log(values.latitude);
+    errors.latitude = 'Wrong Format for example 37.983933'
   }
-  if (!values.longitude) {
+  if(!values.longitude || isNaN(values.longitude) || !/^\d*\.?\d*$/g.test(Math.abs(values.longitude))){
+    errors.longitude = 'Wrong Format for example -87.596989'
+  }
+  /*if (!values.longitude) {
     errors.longitude = 'Required';
-  }
-
+  } */
+  
   return errors;
 };
 
 function App() {
   const [dataarr, setDatarr] = useState([]);
+  const classes = useStyles(); 
+  const [print, setPrint] = useState(true);
+  const handlechange =  async values =>{
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+    await sleep(300);
+    console.log("values in handlechange: ", values); 
+  
+   
+  }
+  function printChart() {
+    const input = document.getElementById('prayerchart'); 
+    //ref: https://morioh.com/p/2580cfbcefd5
+    html2canvas(input)
+      .then((canvas) =>{
+        var imgWidth = 200;  
+        var pageHeight = 290;  
+        var imgHeight = canvas.height * imgWidth / canvas.width;  
+        console.log("imgHeight ", imgHeight);
+        var heightLeft = imgHeight;  
+        const imgData = canvas.toDataURL('image/png');  
+        const pdf = new jsPDF('p', 'mm', 'a4')  
+        var position = 0;  
+        var heightLeft = imgHeight;  
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);  
+        pdf.save("prayerchart.pdf");  
+      })
+    
+  }
   const onSubmit = async values => {
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
     await sleep(300);
@@ -74,20 +110,58 @@ function App() {
       .then((res) => res.json())
       .then((data) => {
         console.log("data", data);
-     //   window.alert(JSON.stringify(values, 0, 2));
-        setDatarr(data.times);
+        var now = new Date();
+        var start = new Date(now.getFullYear(), 0, 0);
+        var diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+        var oneDay = 1000 * 60 * 60 * 24;
+        var day = Math.floor(diff / oneDay);
+        var actual = day - 1; 
+        console.log('Day of year: ' + actual);
+         setDatarr(data.times.slice(actual,data.times.length));
       })
       .catch((err) => {
+        alert("Prayer times could not be fetched.");
         console.log(err);
       });
     
+    },
+    function(error) {
+     const latitude = values.latitude;
+     const longitude = values.longitude; 
+     const url = 'https://www.moonsighting.com/time_json.php?year=' + year + '&tz=' + timezone +'&lat=' + latitude + '&lon=' + longitude + '&method=' + method + '&both=' + both + '&time=' + time
+
+     fetch(url, {
+       
+    })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("data", data);
+      var now = new Date();
+      var start = new Date(now.getFullYear(), 0, 0);
+      var diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+      var oneDay = 1000 * 60 * 60 * 24;
+      var day = Math.floor(diff / oneDay);
+      var actual = day - 1; 
+      console.log('Day of year: ' + actual);
+       setDatarr(data.times.slice(actual,data.times.length));
+    })
+    .catch((err) => {
+      console.log(err);
+      alert("Prayer times could not be fetched.");
     });
+
+    }
+     );
   
   };
   useEffect(() => {
     console.log("dataarr ", dataarr);
     //loading here as this does it once
     //second array makes it simulate component did mount
+     if(dataarr.length > 10){
+      setPrint(false); 
+
+     }
   }, [dataarr]);
   useEffect(() => {
     const year = new Date().getFullYear(); 
@@ -107,7 +181,9 @@ function App() {
       .then((data) => {
         console.log("data", data);
        // window.alert(JSON.stringify(values, 0, 2));
-       console.log("data.times ", data.times);
+       var oneDayfish =  data.times[0].day.split(data.times[0].day.length - 3 ,data.times[0].day.length);
+       var dayofweek = oneDayfish[0]; 
+       console.log("oneDayfish ", dayofweek.substring( dayofweek.length - 3,dayofweek.length));
        var now = new Date();
        var start = new Date(now.getFullYear(), 0, 0);
        var diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
@@ -121,29 +197,44 @@ function App() {
         console.log(err);
       });
     
-    });
+    },
+    function(error) {
+     alert("Error! No location provided Please Enter Latitude and Longitude on the form ")
+    }
+    
+    
+    );
   }, []);
   return (
     <div style={{ padding: 16, margin: 'auto', maxWidth: 600 }}>
       <CssBaseline />
-      <Typography variant="h2" align="center" component="h1" gutterBottom>
-      Page Under Construction Use With Caution 
-      </Typography>
-  
       <Typography variant="h4" align="center" component="h1" gutterBottom>
-        Prayer Chart Time Form
+        Prayer Times
       </Typography>
   
       <Typography paragraph>
+        To generate prayer times this app needs your latitude and longitude. If you have enabled location tracking this will happen automatically.
+        User Location is not stored anywhere on website please consider enabling. 
+        Otherwise use the following links: {' '}
         <Link href="https://support.google.com/maps/answer/18539?co=GENIE.Platform%3DDesktop&hl=en">
-         How to get Latitude and longitude from Google
+         How to get Latitude and longitude from Google Maps.
         </Link>
-        . Enter your desired Latitude and Longitude to get Prayer Times from this {' '}
+        Or you can use         <Link href="https://www.latlong.net/">
+         this.
+        </Link>{' '}
+         Enter your desired Latitude and Longitude to get Prayer Times from this {' '}
         <Link href="https://github.com/PrayerTimeResearch/PrayerTimeAPI">
           API.
         </Link>{' '}
-        User Location is not stored anywhere on website please consider enabling. 
+        Please Note: prayer times will vary depending on your location.  
+ 
       </Typography>
+      <Typography>
+        <Box fontWeight="fontWeightBold">
+        Disclaimer: Please use caution. This is in active development. </Box> </Typography>
+        <Typography> Please report any bugs to ahmedek2786@gmail.com </Typography>
+
+        <Typography> Coming Soon: Ability to print monthly prayer charts </Typography>
       <Form
         onSubmit={onSubmit}
         initialValues={{ ExampleLatitude: '37.97441011798584' , ExampleLongitude: ' -87.4315543621677' }}
@@ -160,7 +251,7 @@ function App() {
                     component={TextField}
                     type="text"
                     label="Latitude"
-                    onChange={onChange}
+                    onChange={(event) => handlechange(event)}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -170,9 +261,8 @@ function App() {
                     name="longitude"
                     component={TextField}
                     type="text"
-                    label="longitude"
-                    onChange={onChange}
-
+                    label="Longitude"
+                    onChange={(event) => handlechange(event)}
                   />
                 </Grid>
                
@@ -180,14 +270,15 @@ function App() {
                {/*disabled = (reset) {submitting || pristine} */}
               {/*disabled = (submit) {submitting}*/}
             
+            
                 <Grid item style={{ marginTop: 16 }}>
                   <Button
-                    type="button"
                     variant="contained"
-                    onClick={reset}
-                    disabled={true}                   
+                    color="primary"
+                    type="submit"
+                    disabled={submitting}
                   >
-                    Reset
+                    Submit
                   </Button>
                 </Grid>
                 <Grid item style={{ marginTop: 16 }}>
@@ -195,18 +286,25 @@ function App() {
                     variant="contained"
                     color="primary"
                     type="submit"
-                    disabled={true}
+                    onClick={printChart}
+                    disabled={print}
                   >
-                    Submit
+                   Prints 9 Days of Prayers
                   </Button>
                 </Grid>
               </Grid>
             </Paper>
            {/*     <pre>{JSON.stringify(values, 0, 2)}</pre>*/}
-            <TableContainer component={Paper}>
-           <Table aria-label="simple table">
+           <Paper className={classes.root}>
+            <TableContainer id="prayerchart" className={classes.container}>
+            <Typography>Data from moonsighting.com and generated by ahmedshahzad.com</Typography>
+
+           <Table stickyHeader   aria-label="sticky table">
              <TableHead>
+            
+              
                <TableRow>
+                 <TableCell>Date</TableCell>
                  <TableCell>Day</TableCell>
                  <TableCell align="right">Fajr</TableCell>
                  <TableCell align="right">Sunrise</TableCell>
@@ -218,11 +316,12 @@ function App() {
              </TableHead>
              <TableBody>
                {dataarr.map((row) => (
-                 <TableRow key={row.times.day}>
+                 <TableRow key={row.day}>
+                  <TableCell align="right"> {row.day.substring(0,row.day.length - 3)} </TableCell>
+
                    <TableCell component="th" scope="row">
-                     {row.day}
+                     {row.day.substring(row.day.length - 3,row.day.length)}
                    </TableCell>
-                 
                    <TableCell align="right">{row.times.fajr}</TableCell>
                    <TableCell align="right">{row.times.sunrise}</TableCell>
                    <TableCell align="right">{row.times.dhuhr}</TableCell>
@@ -234,7 +333,9 @@ function App() {
                ))}
              </TableBody>
            </Table>
+
          </TableContainer>
+         </Paper>
           </form>
         
         )}
