@@ -179,11 +179,7 @@ function App() {
       })
       .then((res) => res.json())
       .then((data) => {
-        console.log("data", data);
-       // window.alert(JSON.stringify(values, 0, 2));
-       var oneDayfish =  data.times[0].day.split(data.times[0].day.length - 3 ,data.times[0].day.length);
-       var dayofweek = oneDayfish[0]; 
-       console.log("oneDayfish ", dayofweek.substring( dayofweek.length - 3,dayofweek.length));
+      
        var now = new Date();
        var start = new Date(now.getFullYear(), 0, 0);
        var diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
@@ -289,7 +285,7 @@ function App() {
                     onClick={printChart}
                     disabled={print}
                   >
-                   Prints 9 Days of Prayers
+                   Prints 9 Days of Prayers (Only works on laptop/desktop)
                   </Button>
                 </Grid>
               </Grid>
